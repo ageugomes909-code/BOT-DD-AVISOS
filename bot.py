@@ -3,12 +3,33 @@ import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+from threading import Thread
+from flask import Flask
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-# Carrega o token com segurança direto das Variáveis de Ambiente do Render/Sistema
+# ==============================================
+# SERVIDOR WEB PARA MANTER O RENDER ONLINE (24/7)
+# ==============================================
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "🤖 Bot Operacional e Online!"
+
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+def manter_online():
+    t = Thread(target=run_flask, daemon=True)
+    t.start()
+
+# ==============================================
+# CONFIGURAÇÕES DO BOT
+# ==============================================
 TOKEN = os.getenv("DISCORD_TOKEN")
 START_TIME = datetime.now(timezone.utc)
 
@@ -480,4 +501,5 @@ if __name__ == "__main__":
     if not TOKEN:
         print("[ERRO FATAL] A variável de ambiente DISCORD_TOKEN não foi configurada!")
     else:
+        manter_online()
         bot.run(TOKEN)
